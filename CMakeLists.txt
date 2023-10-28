@@ -1,29 +1,29 @@
 PROJECT(projectM-pulseaudio)
 
-cmake_minimum_required(VERSION 2.4.0)
+cmake_minimum_required(VERSION 3.22.0)
+cmake_policy(SET CMP0005 NEW)
 
 Include(cmake/CPack-projectM.cmake)
 
 set(QT_USE_OPENGL TRUE)
+set(OpenGL_GL_PREFERENCE GLVND)
 
-cmake_policy(SET CMP0005 OLD)
-
-include(${QT_USE_FILE} FindPkgConfig.cmake)
+find_package(PkgConfig REQUIRED)
 
 # only search for these modules when not building monolithically
 
 if (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 	pkg_search_module(LIBPROJECTM REQUIRED libprojectM)
 	pkg_search_module(LIBPROJECTM-QT REQUIRED libprojectM-qt)
-	ADD_DEFINITIONS(-DLINUX -DPROJECTM_PREFIX='"${LIBPROJECTM_PREFIX}"')
+	ADD_DEFINITIONS(-DLINUX -DPROJECTM_PREFIX="${LIBPROJECTM_PREFIX}")
 else(${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 	set(LIBPROJECTM_FOUND true)
 	set(LIBPROJECTM-QT_FOUND true)
-	ADD_DEFINITIONS(-DLINUX -DPROJECTM_PREFIX='"${CMAKE_INSTALL_PREFIX}"')
+	ADD_DEFINITIONS(-DLINUX -DPROJECTM_PREFIX="${CMAKE_INSTALL_PREFIX}")
 endif(${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 
 FIND_PACKAGE(OpenGL)
-FIND_PACKAGE(Qt4 REQUIRED)
+FIND_PACKAGE(Qt5 COMPONENTS Core Widgets OpenGL REQUIRED)
 
 
 pkg_search_module(LIBPULSE REQUIRED libpulse>=0.9.8)
@@ -59,11 +59,10 @@ set(projectM_pulseaudio_UIS
     PulseDeviceChooserDialog.ui
 )
 
-
-qt4_wrap_ui(projectM_pulseaudio_UIS_H ${projectM_pulseaudio_UIS})
+qt5_wrap_ui(projectM_pulseaudio_UIS_H ${projectM_pulseaudio_UIS})
 
 # After this call, foo_MOC_SRCS = moc_Class1.cxx moc_Class2.cxx moc_Class3.cxx.
-qt4_wrap_cpp(projectM_pulseaudio_MOC_SRCS ${projectM_pulseaudio_MOC_HDRS})
+qt5_wrap_cpp(projectM_pulseaudio_MOC_SRCS ${projectM_pulseaudio_MOC_HDRS})
 
 ADD_DEFINITIONS(-DLINUX)
 ADD_DEFINITIONS(${QT_DEFINITIONS})
@@ -80,7 +79,7 @@ elseif (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 # whether it should is a whole other issue
 endif (${CMAKE_PROJECT_NAME} MATCHES "PROJECTM_ROOT")
 
-INCLUDE_DIRECTORIES(${PROJECTM_INCLUDE} ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${LIBPULSE_INCLUDEDIR})
+INCLUDE_DIRECTORIES(${PROJECTM_INCLUDE} ${Qt5Core_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5OpenGL_INCLUDE_DIRS} ${LIBPULSE_INCLUDEDIR})
 
 LINK_DIRECTORIES(${PROJECTM_LINK} ${PULSEAUDIO_LDFLAGS})
 
@@ -90,7 +89,8 @@ endif(COMMAND cmake_policy)
 
 ADD_EXECUTABLE(projectM-pulseaudio ${projectM_pulseaudio_SRCS} ${projectM_pulseaudio_MOC_SRCS} ${projectM_pulseaudio_UIS_H})
 
-TARGET_LINK_LIBRARIES(projectM-pulseaudio projectM-qt projectM pulse ${QT_QTGUI_LIBRARIES} ${QT_QTOPENGL_LIBRARIES} ${QT_QTCORE_LIBRARIES} ${QT_LIBRARIES})
+target_include_directories(projectM-pulseaudio PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+TARGET_LINK_LIBRARIES(projectM-pulseaudio projectM-qt projectM pulse Qt5::Core Qt5::Widgets Qt5::OpenGL)
 
 INSTALL(TARGETS projectM-pulseaudio DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 install(FILES "projectM-pulseaudio.desktop" DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)

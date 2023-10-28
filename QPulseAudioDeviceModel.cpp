@@ -69,9 +69,9 @@ QVariant QPulseAudioDeviceModel::data ( const QModelIndex & index, int role = Qt
 			
 		case Qt::BackgroundRole:
 			if (_devicePosition == _devices.begin() + index.row()) {
-				return Qt::green;										
+				return QColor(Qt::green);
 			} else {
-				return Qt::white;
+				return QColor(Qt::white);
 			}						
 		default:			
 			
