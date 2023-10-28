@@ -73,6 +73,7 @@ std::string read_config();
 
 //#include <pulsecore/gccmacro.h>
 
+#include "qprojectM-pulseaudio.hpp"
 #include "QPulseAudioThread.hpp"
 #include "QPulseAudioDeviceChooser.hpp"
 
@@ -90,7 +91,7 @@ int main ( int argc, char*argv[] )
 	int i;
 	char projectM_data[1024];
 
-	QApplication app ( argc, argv );
+	ProjectMApp app ( argc, argv );
 
 	setlocale(LC_NUMERIC, "C");  // Fix
 	std::string config_file;
@@ -120,7 +121,8 @@ int main ( int argc, char*argv[] )
 	
 	//QApplication::connect(mainWindow, SIGNAL(shuttingDown()), pulseThread, SLOT(cleanup()), Qt::DirectConnection);
  	int ret = app.exec();
-	devChooser.writeSettings();
+	if (pulseThread != NULL)
+		devChooser.writeSettings();
 	
 	if (mainWindow)
         	mainWindow->unregisterSettingsAction(&pulseAction);
@@ -217,4 +219,14 @@ std::string read_config()
 	abort();
 }
 
-
+ProjectMApp::ProjectMApp(int & argc, char ** argv) : QApplication(argc, argv) {}
+bool ProjectMApp::notify(QObject* receiver, QEvent* event)
+{
+	try {
+		return QApplication::notify(receiver, event);
+	} catch (std::exception & ex) {
+		qCritical() << "Caught exception: " << ex.what();
+		return false;
+	}
+}
+ProjectMApp::~ProjectMApp() noexcept {}
